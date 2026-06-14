@@ -1,0 +1,15 @@
+node_modules/
+
+web/logs/
+
+config/db.properties
+
+.env
+.env.*
+!.env.example
+
+target/
+*.class
+
+.DS_Store
+Thumbs.db

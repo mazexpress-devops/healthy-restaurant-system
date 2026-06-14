@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>منظومة حجز طلبات مطعم صحي</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>منظومة حجز طلبات مطعم صحي</h1>
+      <p>طلب ذكي، حساب غذائي لحظي، وتنبيهات صحية مرتبطة بقاعدة MongoDB</p>
+    </div>
+    <div class="top-actions">
+      <span id="connectionState">متصل بقاعدة البيانات</span>
+      <button id="refreshBtn">تحديث</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="customer">واجهة الزبون</button>
+    <button class="tab" data-tab="kitchen">شاشة الشيف</button>
+    <button class="tab" data-tab="admin">مدير النظام</button>
+  </nav>
+
+  <main>
+    <section id="customer" class="panel active">
+      <div class="status-band" id="tableOrders"></div>
+
+      <div class="split">
+        <section>
+          <div class="section-title">
+            <h2>المسار الأول: تصفح المنيو</h2>
+            <label>رقم الطاولة <input id="readyTable" type="number" min="1" value="1"></label>
+          </div>
+          <div id="meals" class="grid"></div>
+        </section>
+
+        <section>
+          <div class="section-title">
+            <h2>المسار الثاني: الطلب الخاص</h2>
+            <button id="clearCustomBtn">تفريغ الاختيارات</button>
+          </div>
+
+          <div class="form-grid">
+            <label>الطاولة <input id="tableNumber" type="number" min="1" value="1"></label>
+            <label>العمر <input id="age" type="number" value="25"></label>
+            <label>الوزن kg <input id="weightKg" type="number" value="70"></label>
+            <label>الطول cm <input id="heightCm" type="number" value="170"></label>
+            <label>الهدف <select id="goal"></select></label>
+          </div>
+
+          <h3>الحالة الصحية</h3>
+          <div id="conditions" class="chips"></div>
+
+          <div class="summary" id="targetBox"></div>
+          <div id="ingredients" class="ingredients"></div>
+          <div class="summary" id="summary"></div>
+          <div class="alerts" id="alerts"></div>
+          <button id="customOrderBtn" class="primary wide">تأكيد الطلب وإرساله للمطبخ</button>
+        </section>
+      </div>
+    </section>
+
+    <section id="kitchen" class="panel">
+      <div class="section-title">
+        <h2>شاشة الشيف / المطبخ</h2>
+        <span class="badge" id="openCount">0 طلب مفتوح</span>
+      </div>
+      <div id="orders" class="orders"></div>
+    </section>
+
+    <section id="admin" class="panel">
+      <div id="stats" class="stats"></div>
+
+      <div class="admin-grid">
+        <section class="card">
+          <h2>إضافة / تحديث مكون</h2>
+          <div class="form-grid">
+            <label>الاسم <input id="newName"></label>
+            <label>الفئة <select id="newCategory"></select></label>
+            <label>الحصة <input id="newServing" value="حصة واحدة"></label>
+            <label>السعر <input id="newPrice" type="number" value="5"></label>
+            <label>السعرات <input id="newCalories" type="number" value="100"></label>
+            <label>بروتين <input id="newProtein" type="number" value="0"></label>
+            <label>كارب <input id="newCarbs" type="number" value="0"></label>
+            <label>دهون <input id="newFat" type="number" value="0"></label>
+          </div>
+          <div class="chips">
+            <label><input id="flagLactose" type="checkbox"> لاكتوز</label>
+            <label><input id="flagGluten" type="checkbox"> غلوتين</label>
+            <label><input id="flagSugar" type="checkbox"> عالي السكر</label>
+            <label><input id="flagSodium" type="checkbox"> عالي الصوديوم</label>
+            <label><input id="flagFat" type="checkbox"> عالي الدهون</label>
+          </div>
+          <button id="addIngredientBtn" class="primary wide">حفظ المكون</button>
+        </section>
+
+        <section class="card">
+          <h2>إنشاء وجبة جاهزة</h2>
+          <div class="form-grid">
+            <label>اسم الوجبة <input id="mealName"></label>
+            <label>السعر الاختياري <input id="mealPrice" type="number" placeholder="اتركه فارغا لحساب السعر"></label>
+          </div>
+          <label>وصف الوجبة <input id="mealDescription"></label>
+          <div id="mealIngredientList" class="compact-list"></div>
+          <button id="addMealBtn" class="primary wide">حفظ الوجبة الجاهزة</button>
+        </section>
+
+        <section class="card">
+          <h2>إدارة حسابات الطاقم</h2>
+          <div class="form-grid">
+            <label>اسم المستخدم <input id="staffUsername"></label>
+            <label>الاسم الكامل <input id="staffFullName"></label>
+            <label>الدور
+              <select id="staffRole">
+                <option value="CHEF">الشيف</option>
+                <option value="ADMIN">مدير النظام</option>
+              </select>
+            </label>
+          </div>
+          <button id="addStaffBtn" class="primary wide">حفظ حساب الطاقم</button>
+          <div id="staffList" class="admin-list"></div>
+        </section>
+      </div>
+
+      <div class="split">
+        <section>
+          <h2>إدارة المكونات</h2>
+          <div id="adminIngredients" class="admin-list"></div>
+        </section>
+        <section>
+          <h2>إدارة الوجبات والتقارير</h2>
+          <div id="adminMeals" class="admin-list"></div>
+          <h3>آخر الطلبات والفواتير</h3>
+          <div id="adminOrders" class="orders"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

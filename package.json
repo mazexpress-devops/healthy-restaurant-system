@@ -1,0 +1,13 @@
+{
+  "name": "healthy-restaurant-mongo-runner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node web/server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongodb": "^6.17.0"
+  }
+}
