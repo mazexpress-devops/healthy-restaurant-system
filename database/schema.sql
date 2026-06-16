@@ -70,6 +70,20 @@ CREATE TABLE IF NOT EXISTS ready_meal_ingredients (
     ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS dining_tables (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  table_number INT NOT NULL,
+  account_name VARCHAR(60) NOT NULL,
+  password_hash CHAR(64) NOT NULL,
+  status ENUM('OPEN', 'CLOSED') NOT NULL DEFAULT 'OPEN',
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT chk_dining_table_number CHECK (table_number > 0),
+  UNIQUE KEY uk_dining_tables_number (table_number),
+  UNIQUE KEY uk_dining_tables_account (account_name)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS customers (
   id INT AUTO_INCREMENT PRIMARY KEY,
   table_number INT NOT NULL,
@@ -154,5 +168,6 @@ CREATE TABLE IF NOT EXISTS order_item_ingredients (
     ON DELETE CASCADE,
   CONSTRAINT fk_order_item_ingredient_ingredient
     FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
-    ON DELETE SET NULL
+    ON DELETE SET NULL,
+  UNIQUE KEY uk_order_item_ingredient_once (order_item_id, ingredient_id)
 ) ENGINE=InnoDB;

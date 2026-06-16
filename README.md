@@ -1,5 +1,35 @@
 # Healthy Restaurant Orders System
 
+## Java Swing / NetBeans Run
+
+This Maven project is configured to run the Swing desktop application by default:
+
+```text
+com.healthyrestaurant.ui.SwingApp
+```
+
+Open the folder in NetBeans 10 as a Maven project, make sure JDK and Maven are configured, then click **Run Project**. The project targets Java 8 syntax for easier lab compatibility.
+
+Database teaching points are kept in simple layers:
+
+- `Database.java` loads the MySQL JDBC driver and opens connections with `DriverManager`.
+- DAO classes use `PreparedStatement` and `ResultSet`.
+- Swing screens use `JTable` with `DefaultTableModel` to show meals, ingredients, and orders.
+- The UI calls services/DAO classes instead of writing SQL inside button handlers.
+- Customer ordering uses ready-made table accounts (`table1` to `table10`), so customers do not create personal accounts.
+- The first screen only chooses the intended user path. Customer, chef, and admin screens are not shown together.
+- Chef and admin work screens stay hidden until login succeeds.
+- `database/seed.sql` fills the system with Libyan sample data and two kitchen demo orders.
+
+Current database mode:
+
+- The Swing app currently uses local MySQL Server 8.4 at `127.0.0.1:3306`.
+- Local MySQL data files are stored in `mysql-data/`.
+- Import data with `database/schema.sql` and `database/seed.sql`.
+- Customer table logins: `table1` / `1` through `table10` / `10`.
+- Chef login: `chef` / `chef123`
+- Admin login: `admin` / `admin123`
+
 منظومة Java + MySQL لحجز طلبات مطعم صحي، مبنية على الدراسة المرفقة. النظام يعمل بواجهة كونسول ويغطي ثلاثة أدوار:
 
 - الزبون: تصفح الوجبات الجاهزة أو إنشاء وجبة مخصصة.

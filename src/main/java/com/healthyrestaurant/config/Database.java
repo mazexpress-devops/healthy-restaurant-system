@@ -15,6 +15,7 @@ public final class Database {
             "jdbc:mysql://localhost:3306/healthy_restaurant"
                     + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
                     + "&useUnicode=true&characterEncoding=UTF-8";
+    private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final Properties PROPERTIES = loadProperties();
 
     private Database() {
@@ -24,7 +25,16 @@ public final class Database {
         String url = value("db.url", "DB_URL", DEFAULT_URL);
         String user = value("db.user", "DB_USER", "root");
         String password = value("db.password", "DB_PASSWORD", "");
+        loadDriver();
         return DriverManager.getConnection(url, user, password);
+    }
+
+    private static void loadDriver() throws SQLException {
+        try {
+            Class.forName(MYSQL_DRIVER);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("MySQL JDBC driver was not found: " + MYSQL_DRIVER, e);
+        }
     }
 
     private static Properties loadProperties() {

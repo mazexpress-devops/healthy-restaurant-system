@@ -10,6 +10,8 @@ config/db.properties
 
 target/
 *.class
+lib/*.jar
+mysql-data/
 
 .DS_Store
 Thumbs.db
