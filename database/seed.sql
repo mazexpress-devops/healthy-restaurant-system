@@ -5,7 +5,7 @@ USE healthy_restaurant;
 INSERT INTO users (username, password_hash, full_name, role, active)
 VALUES
   ('admin', SHA2('admin123', 256), 'منال الفيتوري', 'ADMIN', TRUE),
-  ('chef', SHA2('chef123', 256), 'سالم الورفلي', 'CHEF', TRUE)
+  ('chef', SHA2('chef123', 256), 'إيناس عبد المنعم', 'CHEF', TRUE)
 ON DUPLICATE KEY UPDATE
   full_name = VALUES(full_name),
   role = VALUES(role),

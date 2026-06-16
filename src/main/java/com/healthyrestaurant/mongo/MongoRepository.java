@@ -413,7 +413,7 @@ public class MongoRepository {
 
     private void seedUsers() {
         upsertUser("admin", "admin123", "منال الفيتوري", Role.ADMIN);
-        upsertUser("chef", "chef123", "سالم الورفلي", Role.CHEF);
+        upsertUser("chef", "chef123", "إيناس عبد المنعم", Role.CHEF);
     }
 
     private void upsertUser(String username, String password, String fullName, Role role) {
