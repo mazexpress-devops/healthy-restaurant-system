@@ -1,13 +1,6 @@
-node_modules/
-
-web/logs/
-
 config/db.properties
 
-.env
-.env.*
-!.env.example
-
+.tools/
 target/
 *.class
 lib/*.jar

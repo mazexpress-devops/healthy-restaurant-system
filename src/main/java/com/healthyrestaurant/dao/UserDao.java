@@ -1,7 +1,6 @@
 package com.healthyrestaurant.dao;
 
 import com.healthyrestaurant.config.Database;
-import com.healthyrestaurant.model.Role;
 import com.healthyrestaurant.model.User;
 
 import java.sql.Connection;
@@ -26,7 +25,7 @@ public class UserDao {
                             resultSet.getInt("id"),
                             resultSet.getString("username"),
                             resultSet.getString("full_name"),
-                            Role.valueOf(resultSet.getString("role"))));
+                            resultSet.getInt("role")));
                 }
             }
         }

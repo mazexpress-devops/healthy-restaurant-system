@@ -10,7 +10,6 @@ import com.healthyrestaurant.model.MealSummary;
 import com.healthyrestaurant.model.OrderStatus;
 import com.healthyrestaurant.model.OrderTicket;
 import com.healthyrestaurant.model.ReadyMeal;
-import com.healthyrestaurant.model.Role;
 import com.healthyrestaurant.model.StaffAccount;
 import com.healthyrestaurant.model.User;
 import com.healthyrestaurant.mysql.MySqlRepository;
@@ -136,8 +135,12 @@ public class MainFrame extends JFrame {
     private JPanel adminWorkspacePanel;
     private JButton adminRefreshIngredientsButton;
     private JButton adminAddIngredientButton;
+    private JButton adminEditIngredientButton;
+    private JButton adminDeleteIngredientButton;
     private JButton adminToggleIngredientButton;
     private JButton adminRefreshOrdersButton;
+    private JButton adminEditOrderButton;
+    private JButton adminDeleteOrderButton;
     private JButton adminRefreshAccountsButton;
     private JButton adminAddStaffButton;
     private JButton adminEditStaffButton;
@@ -212,27 +215,27 @@ public class MainFrame extends JFrame {
         wrapper.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Choose User"));
+        panel.setBorder(BorderFactory.createTitledBorder("Choose Permission"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
 
-        JButton customerButton = new JButton("Customer Table");
+        JButton customerButton = new JButton("1 - Customer");
         customerButton.setPreferredSize(new Dimension(260, 42));
         customerButton.addActionListener(event -> {
-            tableLoginStatusLabel.setText("Enter table account, for example table2 / 2");
+            tableLoginStatusLabel.setText("Use table account, for example table2 / 2");
             showScreen(SCREEN_TABLE_LOGIN);
         });
         addHomeButton(panel, gbc, 0, customerButton);
 
-        JButton chefButton = new JButton("Chef Sign In");
+        JButton chefButton = new JButton("2 - Chef");
         chefButton.setPreferredSize(new Dimension(260, 42));
         chefButton.addActionListener(event -> showScreen(SCREEN_CHEF));
         addHomeButton(panel, gbc, 1, chefButton);
 
-        JButton adminButton = new JButton("Admin Sign In");
+        JButton adminButton = new JButton("3 - Admin");
         adminButton.setPreferredSize(new Dimension(260, 42));
         adminButton.addActionListener(event -> showScreen(SCREEN_ADMIN));
         addHomeButton(panel, gbc, 2, adminButton);
@@ -246,7 +249,7 @@ public class MainFrame extends JFrame {
         wrapper.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Customer Table Sign In"));
+        panel.setBorder(BorderFactory.createTitledBorder("1 - Customer"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 8, 6, 8);
@@ -255,7 +258,7 @@ public class MainFrame extends JFrame {
 
         tableUsernameField = new JTextField("table1", 18);
         tablePasswordField = new JPasswordField("1", 18);
-        tableLoginStatusLabel = new JLabel("Enter table account, for example table2 / 2");
+        tableLoginStatusLabel = new JLabel("Use table account, for example table2 / 2");
 
         JButton loginButton = new JButton("Open Table");
         loginButton.addActionListener(event -> loginCustomerTable());
@@ -555,6 +558,14 @@ public class MainFrame extends JFrame {
         adminAddIngredientButton.addActionListener(event -> showAddIngredientDialog());
         ingredientActions.add(adminAddIngredientButton);
 
+        adminEditIngredientButton = new JButton("Edit Ingredient");
+        adminEditIngredientButton.addActionListener(event -> showEditIngredientDialog());
+        ingredientActions.add(adminEditIngredientButton);
+
+        adminDeleteIngredientButton = new JButton("Delete Ingredient");
+        adminDeleteIngredientButton.addActionListener(event -> deleteSelectedIngredient());
+        ingredientActions.add(adminDeleteIngredientButton);
+
         adminToggleIngredientButton = new JButton("Toggle Availability");
         adminToggleIngredientButton.addActionListener(event -> toggleSelectedIngredient());
         ingredientActions.add(adminToggleIngredientButton);
@@ -580,10 +591,21 @@ public class MainFrame extends JFrame {
         adminRefreshOrdersButton = new JButton("Refresh Recent Orders");
         adminRefreshOrdersButton.addActionListener(event -> refreshRecentOrders());
 
+        adminEditOrderButton = new JButton("Edit Order");
+        adminEditOrderButton.addActionListener(event -> showEditOrderDialog());
+
+        adminDeleteOrderButton = new JButton("Delete Order");
+        adminDeleteOrderButton.addActionListener(event -> deleteSelectedOrder());
+
+        JPanel orderActions = new JPanel(new FlowLayout(FlowLayout.LEADING, 8, 0));
+        orderActions.add(adminRefreshOrdersButton);
+        orderActions.add(adminEditOrderButton);
+        orderActions.add(adminDeleteOrderButton);
+
         JPanel orderPanel = new JPanel(new BorderLayout(8, 8));
         orderPanel.setBorder(BorderFactory.createTitledBorder("Recent Orders"));
         orderPanel.add(new JScrollPane(recentOrderTable), BorderLayout.CENTER);
-        orderPanel.add(adminRefreshOrdersButton, BorderLayout.SOUTH);
+        orderPanel.add(orderActions, BorderLayout.SOUTH);
 
         JSplitPane topSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, ingredientPanel, orderPanel);
         topSplit.setResizeWeight(0.55);
@@ -1076,7 +1098,7 @@ public class MainFrame extends JFrame {
         runDatabaseTask("Checking chef login...", new DatabaseTask<Optional<User>>() {
             @Override
             public Optional<User> run() throws Exception {
-                return repository.login(username, password, Role.CHEF);
+                return repository.login(username, password, User.ROLE_CHEF);
             }
         }, new TaskSuccess<Optional<User>>() {
             @Override
@@ -1181,7 +1203,7 @@ public class MainFrame extends JFrame {
         runDatabaseTask("Checking admin login...", new DatabaseTask<Optional<User>>() {
             @Override
             public Optional<User> run() throws Exception {
-                return repository.login(username, password, Role.ADMIN);
+                return repository.login(username, password, User.ROLE_ADMIN);
             }
         }, new TaskSuccess<Optional<User>>() {
             @Override
@@ -1237,7 +1259,7 @@ public class MainFrame extends JFrame {
                     account.getId(),
                     account.getUsername(),
                     account.getFullName(),
-                    account.getRole().name(),
+                    account.getRole(),
                     yesNo(account.isActive())
             });
         }
@@ -1280,7 +1302,7 @@ public class MainFrame extends JFrame {
 
         JTextField usernameField = new JTextField(existing == null ? "" : existing.getUsername(), 18);
         JTextField fullNameField = new JTextField(existing == null ? "" : existing.getFullName(), 18);
-        JComboBox<Role> roleCombo = new JComboBox<Role>(Role.values());
+        JComboBox<Integer> roleCombo = new JComboBox<Integer>(User.staffRoles());
         if (existing != null) {
             roleCombo.setSelectedItem(existing.getRole());
             usernameField.setEditable(false);
@@ -1307,9 +1329,10 @@ public class MainFrame extends JFrame {
         final String username = usernameField.getText().trim();
         final String fullName = fullNameField.getText().trim();
         final String password = new String(passwordField.getPassword());
-        final Role role = (Role) roleCombo.getSelectedItem();
+        final Integer selectedRole = (Integer) roleCombo.getSelectedItem();
+        final int role = selectedRole == null ? 0 : selectedRole.intValue();
         final boolean active = activeBox.isSelected();
-        if (username.isEmpty() || fullName.isEmpty() || role == null) {
+        if (username.isEmpty() || fullName.isEmpty() || role == 0) {
             showInfo("Username, full name, and role are required.");
             return;
         }
@@ -1552,6 +1575,163 @@ public class MainFrame extends JFrame {
         });
     }
 
+    private void showEditIngredientDialog() {
+        if (!adminLoggedIn) {
+            showInfo("Admin login is required.");
+            return;
+        }
+
+        int row = selectedModelRow(adminIngredientTable);
+        if (row < 0 || row >= adminIngredients.size()) {
+            showInfo("Select an ingredient first.");
+            return;
+        }
+
+        final Ingredient existing = adminIngredients.get(row);
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JTextField nameField = new JTextField(existing.getName(), 20);
+        JComboBox<IngredientCategory> categoryCombo =
+                new JComboBox<IngredientCategory>(IngredientCategory.values());
+        installCategoryRenderer(categoryCombo);
+        categoryCombo.setSelectedItem(existing.getCategory());
+        JTextField servingField = new JTextField(existing.getServingLabel(), 20);
+        JTextField priceField = new JTextField(existing.getPrice().toPlainString(), 10);
+        JSpinner caloriesSpinner = decimalSpinner(existing.getCalories(), 0.0, 5000.0, 1.0);
+        JSpinner proteinSpinner = decimalSpinner(existing.getProteinGrams(), 0.0, 500.0, 1.0);
+        JSpinner carbsSpinner = decimalSpinner(existing.getCarbsGrams(), 0.0, 500.0, 1.0);
+        JSpinner fatSpinner = decimalSpinner(existing.getFatGrams(), 0.0, 500.0, 1.0);
+        JCheckBox lactoseBox = new JCheckBox("Contains lactose", existing.isContainsLactose());
+        JCheckBox glutenBox = new JCheckBox("Contains gluten", existing.isContainsGluten());
+        JCheckBox sugarBox = new JCheckBox("High sugar", existing.isHighSugar());
+        JCheckBox sodiumBox = new JCheckBox("High sodium", existing.isHighSodium());
+        JCheckBox highFatBox = new JCheckBox("High fat", existing.isHighFat());
+        JCheckBox availableBox = new JCheckBox("Available", existing.isAvailable());
+
+        addFormRow(panel, gbc, 0, 0, "Name", nameField);
+        addFormRow(panel, gbc, 1, 0, "Category", categoryCombo);
+        addFormRow(panel, gbc, 2, 0, "Serving", servingField);
+        addFormRow(panel, gbc, 3, 0, "Price", priceField);
+        addFormRow(panel, gbc, 4, 0, "Calories", caloriesSpinner);
+        addFormRow(panel, gbc, 5, 0, "Protein g", proteinSpinner);
+        addFormRow(panel, gbc, 6, 0, "Carbs g", carbsSpinner);
+        addFormRow(panel, gbc, 7, 0, "Fat g", fatSpinner);
+
+        JPanel flags = new JPanel(new FlowLayout(FlowLayout.LEADING, 4, 0));
+        flags.add(lactoseBox);
+        flags.add(glutenBox);
+        flags.add(sugarBox);
+        flags.add(sodiumBox);
+        flags.add(highFatBox);
+        flags.add(availableBox);
+        addFormRow(panel, gbc, 8, 0, "Flags", flags);
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                panel,
+                "Edit Ingredient #" + existing.getId(),
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        final Ingredient updated;
+        try {
+            String name = nameField.getText().trim();
+            String serving = servingField.getText().trim();
+            if (name.isEmpty() || serving.isEmpty()) {
+                showInfo("Name and serving are required.");
+                return;
+            }
+
+            BigDecimal price = new BigDecimal(priceField.getText().trim());
+            if (price.compareTo(BigDecimal.ZERO) < 0) {
+                showInfo("Price must not be negative.");
+                return;
+            }
+
+            updated = new Ingredient(
+                    existing.getId(),
+                    name,
+                    (IngredientCategory) categoryCombo.getSelectedItem(),
+                    serving,
+                    price,
+                    doubleValue(caloriesSpinner),
+                    doubleValue(proteinSpinner),
+                    doubleValue(carbsSpinner),
+                    doubleValue(fatSpinner),
+                    lactoseBox.isSelected(),
+                    glutenBox.isSelected(),
+                    sugarBox.isSelected(),
+                    sodiumBox.isSelected(),
+                    highFatBox.isSelected(),
+                    availableBox.isSelected());
+        } catch (NumberFormatException ex) {
+            showInfo("Enter a valid price, for example 12.50.");
+            return;
+        }
+
+        runDatabaseTask("Updating ingredient...", new DatabaseTask<Void>() {
+            @Override
+            public Void run() throws Exception {
+                repository.updateIngredient(updated);
+                return null;
+            }
+        }, new TaskSuccess<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                setStatus("Ingredient #" + updated.getId() + " updated");
+                refreshAdminIngredients();
+                refreshAvailableIngredients();
+            }
+        });
+    }
+
+    private void deleteSelectedIngredient() {
+        if (!adminLoggedIn) {
+            showInfo("Admin login is required.");
+            return;
+        }
+
+        int row = selectedModelRow(adminIngredientTable);
+        if (row < 0 || row >= adminIngredients.size()) {
+            showInfo("Select an ingredient first.");
+            return;
+        }
+
+        final Ingredient ingredient = adminIngredients.get(row);
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Delete ingredient #" + ingredient.getId() + " - " + ingredient.getName()
+                        + "?\nThis will also remove it from ready-meal ingredient links.",
+                "Delete Ingredient",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        runDatabaseTask("Deleting ingredient...", new DatabaseTask<Void>() {
+            @Override
+            public Void run() throws Exception {
+                repository.deleteIngredient(ingredient.getId());
+                return null;
+            }
+        }, new TaskSuccess<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                setStatus("Ingredient #" + ingredient.getId() + " deleted");
+                refreshAdminIngredients();
+                refreshAvailableIngredients();
+            }
+        });
+    }
+
     private void toggleSelectedIngredient() {
         if (!adminLoggedIn) {
             showInfo("Admin login is required.");
@@ -1618,6 +1798,123 @@ public class MainFrame extends JFrame {
             return;
         }
         loadTicketDetails(recentOrders.get(row).getId(), adminDetailsArea);
+    }
+
+    private void showEditOrderDialog() {
+        if (!adminLoggedIn) {
+            showInfo("Admin login is required.");
+            return;
+        }
+
+        int row = selectedModelRow(recentOrderTable);
+        if (row < 0 || row >= recentOrders.size()) {
+            showInfo("Select an order first.");
+            return;
+        }
+
+        final OrderTicket existing = recentOrders.get(row);
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JSpinner tableSpinner = new JSpinner(new SpinnerNumberModel(existing.getTableNumber(), 1, 999, 1));
+        JComboBox<OrderStatus> statusCombo = new JComboBox<OrderStatus>(OrderStatus.values());
+        statusCombo.setSelectedItem(existing.getStatus());
+        JTextField subtotalField = new JTextField(existing.getSubtotal().toPlainString(), 10);
+        JTextArea notesArea = new JTextArea(existing.getHealthNotes() == null ? "" : existing.getHealthNotes(), 5, 28);
+        notesArea.setLineWrap(true);
+        notesArea.setWrapStyleWord(true);
+
+        addFormRow(panel, gbc, 0, 0, "Table", tableSpinner);
+        addFormRow(panel, gbc, 1, 0, "Status", statusCombo);
+        addFormRow(panel, gbc, 2, 0, "Total", subtotalField);
+        addFormRow(panel, gbc, 3, 0, "Notes", new JScrollPane(notesArea));
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                panel,
+                "Edit Order #" + existing.getId(),
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        final int tableNumber = ((Number) tableSpinner.getValue()).intValue();
+        final OrderStatus status = (OrderStatus) statusCombo.getSelectedItem();
+        final BigDecimal subtotal;
+        final String notes = notesArea.getText().trim();
+        try {
+            subtotal = new BigDecimal(subtotalField.getText().trim());
+            if (subtotal.compareTo(BigDecimal.ZERO) < 0) {
+                showInfo("Total must not be negative.");
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            showInfo("Enter a valid total, for example 32.00.");
+            return;
+        }
+
+        runDatabaseTask("Updating order...", new DatabaseTask<Void>() {
+            @Override
+            public Void run() throws Exception {
+                repository.updateOrder(existing.getId(), tableNumber, status, subtotal, notes);
+                return null;
+            }
+        }, new TaskSuccess<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                setStatus("Order #" + existing.getId() + " updated");
+                refreshRecentOrders();
+                if (chefLoggedIn) {
+                    refreshKitchenOrders();
+                }
+            }
+        });
+    }
+
+    private void deleteSelectedOrder() {
+        if (!adminLoggedIn) {
+            showInfo("Admin login is required.");
+            return;
+        }
+
+        int row = selectedModelRow(recentOrderTable);
+        if (row < 0 || row >= recentOrders.size()) {
+            showInfo("Select an order first.");
+            return;
+        }
+
+        final OrderTicket ticket = recentOrders.get(row);
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Delete order #" + ticket.getId() + " for table " + ticket.getTableNumber() + "?",
+                "Delete Order",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        runDatabaseTask("Deleting order...", new DatabaseTask<Void>() {
+            @Override
+            public Void run() throws Exception {
+                repository.deleteOrder(ticket.getId());
+                return null;
+            }
+        }, new TaskSuccess<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                adminDetailsArea.setText("");
+                setStatus("Order #" + ticket.getId() + " deleted");
+                refreshRecentOrders();
+                if (chefLoggedIn) {
+                    refreshKitchenOrders();
+                }
+            }
+        });
     }
 
     private void loadTicketDetails(final int orderId, final JTextArea target) {
@@ -1828,8 +2125,12 @@ public class MainFrame extends JFrame {
     private void setAdminControlsEnabled(boolean enabled) {
         adminRefreshIngredientsButton.setEnabled(enabled);
         adminAddIngredientButton.setEnabled(enabled);
+        adminEditIngredientButton.setEnabled(enabled);
+        adminDeleteIngredientButton.setEnabled(enabled);
         adminToggleIngredientButton.setEnabled(enabled);
         adminRefreshOrdersButton.setEnabled(enabled);
+        adminEditOrderButton.setEnabled(enabled);
+        adminDeleteOrderButton.setEnabled(enabled);
         adminIngredientTable.setEnabled(enabled);
         recentOrderTable.setEnabled(enabled);
         if (adminRefreshAccountsButton != null) {

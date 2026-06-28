@@ -1,129 +1,89 @@
 # Healthy Restaurant Orders System
 
-## Java Swing / NetBeans Run
+Java Swing and MySQL system for managing healthy restaurant orders.
+The project is kept as a simple educational desktop system with three permissions:
 
-This Maven project is configured to run the Swing desktop application by default:
+```text
+1 - Customer
+2 - Chef
+3 - Admin
+```
+
+Permissions are stored as integer values in `User`, not as a separate role class or table.
+
+## Run
+
+The Maven project runs the Swing desktop application by default:
 
 ```text
 com.healthyrestaurant.ui.SwingApp
 ```
 
-Open the folder in NetBeans 10 as a Maven project, make sure JDK and Maven are configured, then click **Run Project**. The project targets Java 8 syntax for easier lab compatibility.
+From the project folder:
 
-Database teaching points are kept in simple layers:
+```bash
+mvn clean compile exec:java
+```
 
-- `Database.java` loads the MySQL JDBC driver and opens connections with `DriverManager`.
-- DAO classes use `PreparedStatement` and `ResultSet`.
-- Swing screens use `JTable` with `DefaultTableModel` to show meals, ingredients, and orders.
-- The UI calls services/DAO classes instead of writing SQL inside button handlers.
-- Customer ordering uses ready-made table accounts (`table1` to `table10`), so customers do not create personal accounts.
-- The first screen only chooses the intended user path. Customer, chef, and admin screens are not shown together.
-- Chef and admin work screens stay hidden until login succeeds.
-- `database/seed.sql` fills the system with Libyan sample data and two kitchen demo orders.
+You can also open the folder in NetBeans as a Maven project and run it from there.
 
-Current database mode:
+## Requirements
 
-- The Swing app currently uses local MySQL Server 8.4 at `127.0.0.1:3306`.
-- Local MySQL data files are stored in `mysql-data/`.
-- Import data with `database/schema.sql` and `database/seed.sql`.
-- Customer table logins: `table1` / `1` through `table10` / `10`.
-- Chef login: `chef` / `chef123`
-- Admin login: `admin` / `admin123`
-
-منظومة Java + MySQL لحجز طلبات مطعم صحي، مبنية على الدراسة المرفقة. النظام يعمل بواجهة كونسول ويغطي ثلاثة أدوار:
-
-- الزبون: تصفح الوجبات الجاهزة أو إنشاء وجبة مخصصة.
-- الشيف: استلام الطلبات وعرض المكونات والملاحظات الصحية وتحديث الحالة.
-- مدير النظام: إدارة المكونات والقيم الغذائية والتوفر.
-
-## أهم الوظائف
-
-- حساب السعرات والسعر والمغذيات الكبرى بشكل لحظي.
-- إدخال بيانات الزبون: العمر، الوزن، الطول، الهدف الرياضي، والحالة الصحية.
-- منع المكونات المتعارضة مع الحالات الصحية مثل اللاكتوز، الغلوتين، السكري، الضغط، ودهون الكبد.
-- إرسال الطلب للمطبخ مع كل التفاصيل الصحية والغذائية.
-- حفظ الطلبات والمكونات والوجبات في MySQL.
-
-## المتطلبات
-
-- JDK 11 أو أحدث.
+- JDK 11 or newer.
 - Maven.
 - MySQL Server.
 
-## إعداد قاعدة البيانات
+## Database Setup
 
-من داخل مجلد المشروع:
+Create and seed the database from the project folder:
 
 ```bash
 mysql -u root -p < database/schema.sql
 mysql -u root -p < database/seed.sql
 ```
 
-عدّل إعدادات الاتصال عند الحاجة في:
+If your MySQL password is not empty, create:
 
 ```text
 config/db.properties
 ```
 
-## التشغيل
+Use this format:
 
-```bash
-mvn clean compile exec:java
+```properties
+db.url=jdbc:mysql://localhost:3306/healthy_restaurant?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
+db.user=root
+db.password=your_mysql_password
 ```
 
-## النسخة الشغالة حاليا مع MongoDB
+## Demo Accounts
 
-بما أن الجهاز الحالي لا يحتوي على Java/Maven في PATH ولا يوجد MySQL مثبت، تمت إضافة نسخة ويب شغالة على MongoDB المحلي الموجود لديك.
-
-رابط التشغيل:
+Customer table accounts:
 
 ```text
-http://127.0.0.1:3000
+table1 / 1
+table2 / 2
+...
+table10 / 10
 ```
 
-قاعدة البيانات:
+Staff accounts:
 
 ```text
-mongodb://127.0.0.1:27017/healthy_restaurant
+chef / chef123
+admin / admin123
 ```
 
-تشغيلها مرة أخرى:
-
-```powershell
-npm.cmd start
-```
-
-المزايا المحسنة في نسخة Mongo:
-
-- واجهة زبون بمسارين مطابقين للدراسة: تصفح المنيو وإنشاء وجبة مخصصة.
-- إدخال بيانات العمر، الوزن، الطول، الهدف، والحالة الصحية.
-- حساب لحظي للسعرات والسعر والبروتين والكربوهيدرات والدهون.
-- منع تلقائي للمكونات التي تتعارض مع السكري، اللاكتوز، الغلوتين، الضغط، ودهون الكبد.
-- شاشة شيف تعرض الطلبات والمكونات والملاحظات الصحية وتحديث الحالة.
-- إشعارات للطاولة عند تغير حالة الطلب.
-- طباعة فاتورة الطلب.
-- لوحة مدير لإدارة المكونات، الوجبات الجاهزة، حسابات الطاقم، والتقارير.
-
-## حسابات تجريبية
+## Project Structure
 
 ```text
-مدير النظام:
-username: admin
-password: admin123
-
-الشيف:
-username: chef
-password: chef123
-```
-
-## هيكل المشروع
-
-```text
-database/                         سكربتات MySQL
-config/db.properties              إعدادات الاتصال
-src/main/java/com/healthyrestaurant/app
-src/main/java/com/healthyrestaurant/model
+database/                         MySQL schema and seed scripts
+config/db.properties.example      Example MySQL connection config
+src/main/java/com/healthyrestaurant/config
 src/main/java/com/healthyrestaurant/dao
+src/main/java/com/healthyrestaurant/model
+src/main/java/com/healthyrestaurant/mysql
 src/main/java/com/healthyrestaurant/service
+src/main/java/com/healthyrestaurant/ui
 src/main/java/com/healthyrestaurant/util
 ```

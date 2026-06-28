@@ -11,12 +11,12 @@ import com.healthyrestaurant.model.MealSummary;
 import com.healthyrestaurant.model.OrderStatus;
 import com.healthyrestaurant.model.OrderTicket;
 import com.healthyrestaurant.model.ReadyMeal;
-import com.healthyrestaurant.model.Role;
 import com.healthyrestaurant.model.StaffAccount;
 import com.healthyrestaurant.model.User;
 import com.healthyrestaurant.service.NutritionService;
 import com.healthyrestaurant.util.PasswordUtil;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,7 +37,7 @@ public class MySqlRepository {
         }
     }
 
-    public Optional<User> login(String username, String password, Role requiredRole) throws SQLException {
+    public Optional<User> login(String username, String password, int requiredRole) throws SQLException {
         String sql = "SELECT id, username, full_name, role FROM users "
                 + "WHERE username = ? AND password_hash = ? AND active = TRUE";
         try (Connection connection = Database.getConnection();
@@ -49,8 +49,8 @@ public class MySqlRepository {
                     return Optional.empty();
                 }
 
-                Role role = Role.valueOf(resultSet.getString("role"));
-                if (role != requiredRole && role != Role.ADMIN) {
+                int role = resultSet.getInt("role");
+                if (role != requiredRole && role != User.ROLE_ADMIN) {
                     return Optional.empty();
                 }
 
@@ -109,7 +109,7 @@ public class MySqlRepository {
                         resultSet.getInt("id"),
                         resultSet.getString("username"),
                         resultSet.getString("full_name"),
-                        Role.valueOf(resultSet.getString("role")),
+                        resultSet.getInt("role"),
                         resultSet.getBoolean("active")));
             }
         }
@@ -120,7 +120,7 @@ public class MySqlRepository {
             String username,
             String password,
             String fullName,
-            Role role,
+            int role,
             boolean active) throws SQLException {
         Optional<StaffAccount> existing = findStaffByUsername(username);
         if (existing.isPresent()) {
@@ -180,6 +180,14 @@ public class MySqlRepository {
         ingredientDao.updateAvailability(id, available);
     }
 
+    public void updateIngredient(Ingredient ingredient) throws SQLException {
+        ingredientDao.update(ingredient);
+    }
+
+    public void deleteIngredient(int id) throws SQLException {
+        ingredientDao.delete(id);
+    }
+
     public int createReadyMealOrder(int tableNumber, ReadyMeal meal) throws SQLException {
         return orderDao.createReadyMealOrder(tableNumber, meal);
     }
@@ -210,6 +218,15 @@ public class MySqlRepository {
         orderDao.updateStatus(orderId, status);
     }
 
+    public void updateOrder(int orderId, int tableNumber, OrderStatus status, BigDecimal subtotal, String healthNotes)
+            throws SQLException {
+        orderDao.updateOrder(orderId, tableNumber, status, subtotal, healthNotes);
+    }
+
+    public void deleteOrder(int orderId) throws SQLException {
+        orderDao.deleteOrder(orderId);
+    }
+
     private List<DiningTableAccount> findTables(String sql) throws SQLException {
         List<DiningTableAccount> result = new ArrayList<DiningTableAccount>();
         try (Connection connection = Database.getConnection();
@@ -236,7 +253,7 @@ public class MySqlRepository {
                         resultSet.getInt("id"),
                         resultSet.getString("username"),
                         resultSet.getString("full_name"),
-                        Role.valueOf(resultSet.getString("role")),
+                        resultSet.getInt("role"),
                         resultSet.getBoolean("active")));
             }
         }
@@ -246,7 +263,7 @@ public class MySqlRepository {
             String username,
             String password,
             String fullName,
-            Role role,
+            int role,
             boolean active) throws SQLException {
         String sql = "INSERT INTO users (username, password_hash, full_name, role, active) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = Database.getConnection();
@@ -254,7 +271,7 @@ public class MySqlRepository {
             statement.setString(1, username);
             statement.setString(2, PasswordUtil.sha256(password));
             statement.setString(3, fullName);
-            statement.setString(4, role.name());
+            statement.setInt(4, role);
             statement.setBoolean(5, active);
             statement.executeUpdate();
         }
@@ -264,7 +281,7 @@ public class MySqlRepository {
             String username,
             String password,
             String fullName,
-            Role role,
+            int role,
             boolean active) throws SQLException {
         String cleanPassword = password == null ? "" : password.trim();
         String sql = cleanPassword.isEmpty()
@@ -277,7 +294,7 @@ public class MySqlRepository {
                 statement.setString(index++, PasswordUtil.sha256(cleanPassword));
             }
             statement.setString(index++, fullName);
-            statement.setString(index++, role.name());
+            statement.setInt(index++, role);
             statement.setBoolean(index++, active);
             statement.setString(index, username);
             statement.executeUpdate();

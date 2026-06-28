@@ -4,10 +4,10 @@ public class StaffAccount {
     private final int id;
     private final String username;
     private final String fullName;
-    private final Role role;
+    private final int role;
     private final boolean active;
 
-    public StaffAccount(int id, String username, String fullName, Role role, boolean active) {
+    public StaffAccount(int id, String username, String fullName, int role, boolean active) {
         this.id = id;
         this.username = username;
         this.fullName = fullName;
@@ -27,7 +27,7 @@ public class StaffAccount {
         return fullName;
     }
 
-    public Role getRole() {
+    public int getRole() {
         return role;
     }
 

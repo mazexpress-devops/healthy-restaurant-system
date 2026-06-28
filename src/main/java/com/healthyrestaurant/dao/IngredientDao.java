@@ -17,10 +17,7 @@ public class IngredientDao {
     public List<Ingredient> findAllAvailable() throws SQLException {
         return findBySql("SELECT * FROM ingredients WHERE available = TRUE ORDER BY category, name");
     }
-
-    public List<Ingredient> findAll() throws SQLException {
-        return findBySql("SELECT * FROM ingredients ORDER BY category, name");
-    }
+ 
 
     public Optional<Ingredient> findById(int id) throws SQLException {
         String sql = "SELECT * FROM ingredients WHERE id = ?";
@@ -76,6 +73,57 @@ public class IngredientDao {
             statement.setBoolean(1, available);
             statement.setInt(2, id);
             statement.executeUpdate();
+        }
+    }
+
+    public void update(Ingredient ingredient) throws SQLException {
+        String sql = "UPDATE ingredients SET "
+                + "name = ?, category = ?, serving_label = ?, price = ?, calories = ?, "
+                + "protein_g = ?, carbs_g = ?, fat_g = ?, contains_lactose = ?, "
+                + "contains_gluten = ?, high_sugar = ?, high_sodium = ?, high_fat = ?, available = ? "
+                + "WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, ingredient.getName());
+            statement.setString(2, ingredient.getCategory().name());
+            statement.setString(3, ingredient.getServingLabel());
+            statement.setBigDecimal(4, ingredient.getPrice());
+            statement.setDouble(5, ingredient.getCalories());
+            statement.setDouble(6, ingredient.getProteinGrams());
+            statement.setDouble(7, ingredient.getCarbsGrams());
+            statement.setDouble(8, ingredient.getFatGrams());
+            statement.setBoolean(9, ingredient.isContainsLactose());
+            statement.setBoolean(10, ingredient.isContainsGluten());
+            statement.setBoolean(11, ingredient.isHighSugar());
+            statement.setBoolean(12, ingredient.isHighSodium());
+            statement.setBoolean(13, ingredient.isHighFat());
+            statement.setBoolean(14, ingredient.isAvailable());
+            statement.setInt(15, ingredient.getId());
+            statement.executeUpdate();
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        try (Connection connection = Database.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM ready_meal_ingredients WHERE ingredient_id = ?")) {
+                    statement.setInt(1, id);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "DELETE FROM ingredients WHERE id = ?")) {
+                    statement.setInt(1, id);
+                    statement.executeUpdate();
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
         }
     }
 

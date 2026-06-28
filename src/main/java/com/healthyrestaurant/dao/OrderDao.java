@@ -130,6 +130,29 @@ public class OrderDao {
         }
     }
 
+    public void updateOrder(int orderId, int tableNumber, OrderStatus status, java.math.BigDecimal subtotal, String healthNotes)
+            throws SQLException {
+        String sql = "UPDATE orders SET table_number = ?, status = ?, subtotal = ?, health_notes = ? WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, tableNumber);
+            statement.setString(2, status.name());
+            statement.setBigDecimal(3, subtotal);
+            statement.setString(4, healthNotes);
+            statement.setInt(5, orderId);
+            statement.executeUpdate();
+        }
+    }
+
+    public void deleteOrder(int orderId) throws SQLException {
+        String sql = "DELETE FROM orders WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.executeUpdate();
+        }
+    }
+
     private List<OrderTicket> findTicketsBySql(String sql) throws SQLException {
         List<OrderTicket> tickets = new ArrayList<>();
         try (Connection connection = Database.getConnection();
