@@ -4,8 +4,8 @@ USE healthy_restaurant;
 
 INSERT INTO users (username, password_hash, full_name, role, active)
 VALUES
-  ('admin', SHA2('admin123', 256), 'منال الفيتوري', 3, TRUE),
-  ('chef', SHA2('chef123', 256), 'إيناس عبد المنعم', 2, TRUE)
+  ('admin', 'admin123', 'منال الفيتوري', 3, TRUE),
+  ('chef', 'chef123', 'إيناس عبد المنعم', 2, TRUE)
 ON DUPLICATE KEY UPDATE
   full_name = VALUES(full_name),
   role = VALUES(role),
@@ -13,16 +13,16 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO dining_tables (table_number, account_name, password_hash, status, active)
 VALUES
-  (1, 'table1', SHA2('1', 256), 'OPEN', TRUE),
-  (2, 'table2', SHA2('2', 256), 'OPEN', TRUE),
-  (3, 'table3', SHA2('3', 256), 'OPEN', TRUE),
-  (4, 'table4', SHA2('4', 256), 'OPEN', TRUE),
-  (5, 'table5', SHA2('5', 256), 'OPEN', TRUE),
-  (6, 'table6', SHA2('6', 256), 'OPEN', TRUE),
-  (7, 'table7', SHA2('7', 256), 'OPEN', TRUE),
-  (8, 'table8', SHA2('8', 256), 'OPEN', TRUE),
-  (9, 'table9', SHA2('9', 256), 'OPEN', TRUE),
-  (10, 'table10', SHA2('10', 256), 'OPEN', TRUE)
+  (1, 'table1', '1', 'OPEN', TRUE),
+  (2, 'table2', '2', 'OPEN', TRUE),
+  (3, 'table3', '3', 'OPEN', TRUE),
+  (4, 'table4', '4', 'OPEN', TRUE),
+  (5, 'table5', '5', 'OPEN', TRUE),
+  (6, 'table6', '6', 'OPEN', TRUE),
+  (7, 'table7', '7', 'OPEN', TRUE),
+  (8, 'table8', '8', 'OPEN', TRUE),
+  (9, 'table9', '9', 'OPEN', TRUE),
+  (10, 'table10', '10', 'OPEN', TRUE)
 ON DUPLICATE KEY UPDATE
   account_name = VALUES(account_name),
   password_hash = VALUES(password_hash),

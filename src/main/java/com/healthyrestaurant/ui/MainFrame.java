@@ -145,7 +145,9 @@ public class MainFrame extends JFrame {
     private JButton adminAddStaffButton;
     private JButton adminEditStaffButton;
     private JButton adminToggleStaffButton;
+    private JButton adminAddTableButton;
     private JButton adminEditTableButton;
+    private JButton adminDeleteTableButton;
     private ReadOnlyTableModel adminStaffModel;
     private JTable adminStaffTable;
     private ReadOnlyTableModel adminTableAccountModel;
@@ -687,9 +689,17 @@ public class MainFrame extends JFrame {
         adminTableAccountTable = createTable(adminTableAccountModel);
 
         JPanel tableActions = new JPanel(new FlowLayout(FlowLayout.LEADING, 8, 0));
+        adminAddTableButton = new JButton("Add Table Account");
+        adminAddTableButton.addActionListener(event -> showTableAccountDialog(false));
+        tableActions.add(adminAddTableButton);
+
         adminEditTableButton = new JButton("Edit Table Account");
-        adminEditTableButton.addActionListener(event -> showTableAccountDialog());
+        adminEditTableButton.addActionListener(event -> showTableAccountDialog(true));
         tableActions.add(adminEditTableButton);
+
+        adminDeleteTableButton = new JButton("Delete Table Account");
+        adminDeleteTableButton.addActionListener(event -> deleteSelectedTableAccount());
+        tableActions.add(adminDeleteTableButton);
 
         JPanel tablePanel = new JPanel(new BorderLayout(8, 8));
         tablePanel.setBorder(BorderFactory.createTitledBorder("Customer Table Accounts"));
@@ -1377,7 +1387,101 @@ public class MainFrame extends JFrame {
         });
     }
 
-    private void showTableAccountDialog() {
+    private void showTableAccountDialog(boolean editMode) {
+        if (!adminLoggedIn) {
+            showInfo("Admin login is required.");
+            return;
+        }
+
+        DiningTableAccount existing = null;
+        if (editMode) {
+            int row = selectedModelRow(adminTableAccountTable);
+            if (row < 0 || row >= adminTableAccounts.size()) {
+                showInfo("Select a table account first.");
+                return;
+            }
+            existing = adminTableAccounts.get(row);
+        }
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JSpinner tableNumberSpinner = new JSpinner(new SpinnerNumberModel(
+                existing == null ? nextTableNumber() : existing.getTableNumber(), 1, 999, 1));
+        tableNumberSpinner.setEnabled(!editMode);
+        JLabel accountLabel = new JLabel(existing == null ? "table" + nextTableNumber() : existing.getAccountName());
+        JPasswordField passwordField = new JPasswordField("", 18);
+        JComboBox<String> statusCombo = new JComboBox<String>(new String[]{"OPEN", "CLOSED"});
+        statusCombo.setSelectedItem(existing == null ? "OPEN" : existing.getStatus());
+        JCheckBox activeBox = new JCheckBox("Active", existing == null || existing.isActive());
+
+        addFormRow(panel, gbc, 0, 0, "Table number", tableNumberSpinner);
+        addFormRow(panel, gbc, 1, 0, "Account", accountLabel);
+        addFormRow(panel, gbc, 2, 0, editMode ? "New password" : "Password", passwordField);
+        addFormRow(panel, gbc, 3, 0, "Status", statusCombo);
+        addFormRow(panel, gbc, 4, 0, "", activeBox);
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                panel,
+                editMode ? "Edit Table Account" : "Add Table Account",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        final int tableNumber = ((Number) tableNumberSpinner.getValue()).intValue();
+        final String password = new String(passwordField.getPassword());
+        final String status = (String) statusCombo.getSelectedItem();
+        final boolean active = activeBox.isSelected();
+        if (!editMode && password.trim().isEmpty()) {
+            showInfo("Password is required for a new table account.");
+            return;
+        }
+        if (!editMode && tableNumberExists(tableNumber)) {
+            showInfo("Table " + tableNumber + " already has an account.");
+            return;
+        }
+
+        runDatabaseTask("Saving table account...", new DatabaseTask<Void>() {
+            @Override
+            public Void run() throws Exception {
+                repository.saveTableAccount(tableNumber, password, status, active);
+                return null;
+            }
+        }, new TaskSuccess<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                refreshAdminAccounts();
+                refreshTableAccounts();
+            }
+        });
+    }
+
+    private int nextTableNumber() {
+        int next = 1;
+        for (DiningTableAccount account : adminTableAccounts) {
+            if (account.getTableNumber() >= next) {
+                next = account.getTableNumber() + 1;
+            }
+        }
+        return next;
+    }
+
+    private boolean tableNumberExists(int tableNumber) {
+        for (DiningTableAccount account : adminTableAccounts) {
+            if (account.getTableNumber() == tableNumber) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void deleteSelectedTableAccount() {
         if (!adminLoggedIn) {
             showInfo("Admin login is required.");
             return;
@@ -1389,48 +1493,28 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        DiningTableAccount existing = adminTableAccounts.get(row);
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 4, 4, 4);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel accountLabel = new JLabel(existing.getAccountName());
-        JPasswordField passwordField = new JPasswordField("", 18);
-        JComboBox<String> statusCombo = new JComboBox<String>(new String[]{"OPEN", "CLOSED"});
-        statusCombo.setSelectedItem(existing.getStatus());
-        JCheckBox activeBox = new JCheckBox("Active", existing.isActive());
-
-        addFormRow(panel, gbc, 0, 0, "Account", accountLabel);
-        addFormRow(panel, gbc, 1, 0, "New password", passwordField);
-        addFormRow(panel, gbc, 2, 0, "Status", statusCombo);
-        addFormRow(panel, gbc, 3, 0, "", activeBox);
-
-        int result = JOptionPane.showConfirmDialog(
+        final DiningTableAccount account = adminTableAccounts.get(row);
+        int confirm = JOptionPane.showConfirmDialog(
                 this,
-                panel,
-                "Edit Table Account",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE);
-        if (result != JOptionPane.OK_OPTION) {
+                "Delete table account " + account.getAccountName()
+                        + " for table " + account.getTableNumber() + "?",
+                "Delete Table Account",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
 
-        final int tableNumber = existing.getTableNumber();
-        final String password = new String(passwordField.getPassword());
-        final String status = (String) statusCombo.getSelectedItem();
-        final boolean active = activeBox.isSelected();
-
-        runDatabaseTask("Saving table account...", new DatabaseTask<Void>() {
+        runDatabaseTask("Deleting table account...", new DatabaseTask<Void>() {
             @Override
             public Void run() throws Exception {
-                repository.saveTableAccount(tableNumber, password, status, active);
+                repository.deleteTableAccount(account.getId());
                 return null;
             }
         }, new TaskSuccess<Void>() {
             @Override
             public void onSuccess(Void result) {
+                setStatus("Table account " + account.getAccountName() + " deleted");
                 refreshAdminAccounts();
                 refreshTableAccounts();
             }
@@ -2138,7 +2222,9 @@ public class MainFrame extends JFrame {
             adminAddStaffButton.setEnabled(enabled);
             adminEditStaffButton.setEnabled(enabled);
             adminToggleStaffButton.setEnabled(enabled);
+            adminAddTableButton.setEnabled(enabled);
             adminEditTableButton.setEnabled(enabled);
+            adminDeleteTableButton.setEnabled(enabled);
             adminStaffTable.setEnabled(enabled);
             adminTableAccountTable.setEnabled(enabled);
         }

@@ -2,7 +2,6 @@ package com.healthyrestaurant.service;
 
 import com.healthyrestaurant.dao.UserDao;
 import com.healthyrestaurant.model.User;
-import com.healthyrestaurant.util.PasswordUtil;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -15,8 +14,7 @@ public class AuthService {
     }
 
     public Optional<User> login(String username, String password, int requiredRole) throws SQLException {
-        String passwordHash = PasswordUtil.sha256(password);
-        Optional<User> user = userDao.findActiveByCredentials(username, passwordHash);
+        Optional<User> user = userDao.findActiveByCredentials(username, password);
         if (!user.isPresent()) {
             return Optional.empty();
         }

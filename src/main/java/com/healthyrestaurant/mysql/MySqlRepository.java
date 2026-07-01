@@ -14,7 +14,6 @@ import com.healthyrestaurant.model.ReadyMeal;
 import com.healthyrestaurant.model.StaffAccount;
 import com.healthyrestaurant.model.User;
 import com.healthyrestaurant.service.NutritionService;
-import com.healthyrestaurant.util.PasswordUtil;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -43,7 +42,7 @@ public class MySqlRepository {
         try (Connection connection = Database.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username);
-            statement.setString(2, PasswordUtil.sha256(password));
+            statement.setString(2, password);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
                     return Optional.empty();
@@ -74,10 +73,8 @@ public class MySqlRepository {
                     return Optional.empty();
                 }
 
-                String tablePassword = String.valueOf(resultSet.getInt("table_number"));
-                String storedHash = resultSet.getString("password_hash");
-                boolean passwordMatches = PasswordUtil.sha256(password).equals(storedHash)
-                        || tablePassword.equals(password)
+                String storedPassword = resultSet.getString("password_hash");
+                boolean passwordMatches = password.equals(storedPassword)
                         || "12345678910".equals(password);
                 if (!passwordMatches) {
                     return Optional.empty();
@@ -152,10 +149,19 @@ public class MySqlRepository {
             String cleanPassword = password == null ? "" : password.trim();
             statement.setInt(1, tableNumber);
             statement.setString(2, "table" + tableNumber);
-            statement.setString(3, PasswordUtil.sha256(cleanPassword.isEmpty() ? String.valueOf(tableNumber) : cleanPassword));
+            statement.setString(3, cleanPassword.isEmpty() ? String.valueOf(tableNumber) : cleanPassword);
             statement.setString(4, "CLOSED".equals(status) ? "CLOSED" : "OPEN");
             statement.setBoolean(5, active);
             statement.setString(6, cleanPassword);
+            statement.executeUpdate();
+        }
+    }
+
+    public void deleteTableAccount(int id) throws SQLException {
+        String sql = "DELETE FROM dining_tables WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, id);
             statement.executeUpdate();
         }
     }
@@ -269,7 +275,7 @@ public class MySqlRepository {
         try (Connection connection = Database.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username);
-            statement.setString(2, PasswordUtil.sha256(password));
+            statement.setString(2, password);
             statement.setString(3, fullName);
             statement.setInt(4, role);
             statement.setBoolean(5, active);
@@ -291,7 +297,7 @@ public class MySqlRepository {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             int index = 1;
             if (!cleanPassword.isEmpty()) {
-                statement.setString(index++, PasswordUtil.sha256(cleanPassword));
+                statement.setString(index++, cleanPassword);
             }
             statement.setString(index++, fullName);
             statement.setInt(index++, role);

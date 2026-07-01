@@ -10,14 +10,14 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 public class UserDao {
-    public Optional<User> findActiveByCredentials(String username, String passwordHash) throws SQLException {
+    public Optional<User> findActiveByCredentials(String username, String password) throws SQLException {
         String sql = "SELECT id, username, full_name, role "
                 + "FROM users WHERE username = ? AND password_hash = ? AND active = TRUE";
 
         try (Connection connection = Database.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username);
-            statement.setString(2, passwordHash);
+            statement.setString(2, password);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {

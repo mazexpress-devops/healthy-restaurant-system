@@ -17,7 +17,10 @@ public class IngredientDao {
     public List<Ingredient> findAllAvailable() throws SQLException {
         return findBySql("SELECT * FROM ingredients WHERE available = TRUE ORDER BY category, name");
     }
- 
+
+    public List<Ingredient> findAll() throws SQLException {
+        return findBySql("SELECT * FROM ingredients ORDER BY category, name");
+    }
 
     public Optional<Ingredient> findById(int id) throws SQLException {
         String sql = "SELECT * FROM ingredients WHERE id = ?";
